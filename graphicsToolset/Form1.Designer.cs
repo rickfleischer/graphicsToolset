@@ -1,5 +1,5 @@
 ﻿
-namespace WindowsFormsApp1
+namespace graphicsToolset
 {
     partial class Form1
     {

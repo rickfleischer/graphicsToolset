@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace WindowsFormsApp1
+namespace graphicsToolset
 {
     public partial class Form1 : Form
     {
@@ -24,11 +24,10 @@ namespace WindowsFormsApp1
             textBox1.Text = stringBuilder.ToString();
             return this;
         }
-        private void Exit_Click(object sender, EventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-
+            openPath = "mooga";
         }
-
         private void openFileDialog_FileOk(object sender, CancelEventArgs e)
         {
 
