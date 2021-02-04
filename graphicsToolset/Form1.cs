@@ -21,7 +21,7 @@ namespace graphicsToolset
         Form1 addMessage(string message)
         {
             stringBuilder.AppendLine(message);
-            textBox1.Text = stringBuilder.ToString();
+            toolStatus.Text = stringBuilder.ToString();
             return this;
         }
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -37,7 +37,16 @@ namespace graphicsToolset
         {
             openFileDialog.ShowDialog();
             addMessage($"Using file {openFileDialog.FileName}");
-            openPath = openFileDialog.FileName;
+            openPath = @"C:\Users\merle\Desktop\icons\big\me.png";// openFileDialog.FileName;
+            using (Graphics windowGraphics = inputPictureBox.CreateGraphics())
+            {
+                Point point = new Point(0, 0);// inputPictureBox.Location;
+                Size size = inputPictureBox.Size;
+                Rectangle rectangle = new Rectangle(point, size);
+                Image image = Image.FromFile(openPath);
+                windowGraphics.CopyFromScreen(new Point(0, 0), point, size);
+                windowGraphics.DrawImage(image, rectangle);
+            }
         }
     }
 }
