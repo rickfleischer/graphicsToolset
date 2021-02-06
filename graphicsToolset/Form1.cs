@@ -123,7 +123,7 @@ namespace graphicsToolset
                         data[x, y] = new bigColor(from.GetPixel(x, y));
                     }
             }
-            public Bitmap getBitmap ()
+            public Bitmap getBitmap()
             {
                 Bitmap working = new Bitmap(width,height);
                 foreach(int x in Enumerable.Range(0, width - 1))
@@ -194,6 +194,7 @@ namespace graphicsToolset
                 Size size = inputPictureBox.Size;
                 Rectangle pictureBox = new Rectangle(point, size);
                 Bitmap bitmap = (Bitmap)Image.FromFile(openPath);
+                trial(bitmap);
                 Rectangle imageBox = new Rectangle(point, bitmap.Size);
                 windowGraphics.DrawImage(bitmap, imageBox); // pictureBox
             }
@@ -237,6 +238,79 @@ namespace graphicsToolset
         private void resultBox02_Click(object sender, EventArgs e)
         {
             explodeSlash(sender, e);
+        }
+        Color[] strip = new Color[40]
+        {
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Brown,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Aquamarine,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.DarkBlue,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red,Color.Green,Color.Blue,
+            Color.Red
+        };
+        private void resultStrip_Click(object sender, EventArgs e)
+        {
+            using(Graphics windowGraphics = resultStrip.CreateGraphics())
+            {
+                Size size = resultStrip.ClientSize;
+                Bitmap outmap = new Bitmap(size.Width,size.Height);
+                int count = 0;
+                int colorIndex = 0;
+                Color color;
+                foreach(int x in Enumerable.Range(0, size.Width - 1))
+                {
+                    if(count % 21 == 20)
+                    {
+                        color = Color.Black;
+                        colorIndex++;
+                    }
+                    else 
+                    {
+                        color = strip[colorIndex];
+                    }
+                    foreach(int y in Enumerable.Range(0, size.Height - 1))
+                    {
+                        outmap.SetPixel(x, y, color);
+                    }
+                    count++;
+                }
+                windowGraphics.DrawImage(outmap, new Rectangle(new Point(0, 0), size));
+            }
+        }
+        void trial(Bitmap bitmap)
+        {
+            extract(bitmap, line(new Point(100, 100), new Point(1, 1), 40));
+        }
+        System.Collections.Generic.IEnumerable<Point> line(Point start, Point delta, int count)
+        {
+            for(Point trace = start; 0 < count--; trace.Offset(delta))
+            {
+                yield return trace;
+            }
+            yield break;
+        }
+        int extract(Bitmap bitmap, System.Collections.Generic.IEnumerable<Point> path)
+        {
+            int count = 0;
+            foreach(Point where in path)
+            {
+                Color color = bitmap.GetPixel(where.X, where.Y);
+                bitmap.SetPixel(where.X, where.Y, Color.FromArgb(color.A, 255 - color.R, 255 - color.G, 255 - color.B));
+                strip[count++] = color;
+                if(count >= strip.Length)
+                {
+                    break;
+                }
+            }
+            return count;
         }
     }
 }

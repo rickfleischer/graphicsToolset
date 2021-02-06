@@ -30,7 +30,7 @@ namespace graphicsToolset
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.resultBox01 = new System.Windows.Forms.PictureBox();
             this.resultBox02 = new System.Windows.Forms.PictureBox();
-            this.resultBox03 = new System.Windows.Forms.PictureBox();
+            this.resultStrip = new System.Windows.Forms.PictureBox();
             this.toolStatus = new System.Windows.Forms.TextBox();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.openFile = new System.Windows.Forms.Button();
@@ -40,7 +40,7 @@ namespace graphicsToolset
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.resultBox01)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.resultBox02)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.resultBox03)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.resultStrip)).BeginInit();
             this.SuspendLayout();
             // 
             // inputPictureBox
@@ -84,18 +84,20 @@ namespace graphicsToolset
             this.resultBox02.TabStop = false;
             this.resultBox02.Click += new System.EventHandler(this.resultBox02_Click);
             // 
-            // resultBox03
+            // resultStrip
             // 
-            this.resultBox03.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.resultBox03.Location = new System.Drawing.Point(510, 445);
-            this.resultBox03.Name = "resultBox03";
-            this.resultBox03.Size = new System.Drawing.Size(72, 67);
-            this.resultBox03.TabIndex = 4;
-            this.resultBox03.TabStop = false;
+            this.resultStrip.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.resultStrip.Location = new System.Drawing.Point(3, 505);
+            this.resultStrip.Margin = new System.Windows.Forms.Padding(0);
+            this.resultStrip.Name = "resultStrip";
+            this.resultStrip.Size = new System.Drawing.Size(839, 20);
+            this.resultStrip.TabIndex = 4;
+            this.resultStrip.TabStop = false;
+            this.resultStrip.Click += new System.EventHandler(this.resultStrip_Click);
             // 
             // toolStatus
             // 
-            this.toolStatus.Location = new System.Drawing.Point(25, 392);
+            this.toolStatus.Location = new System.Drawing.Point(9, 392);
             this.toolStatus.Multiline = true;
             this.toolStatus.Name = "toolStatus";
             this.toolStatus.Size = new System.Drawing.Size(436, 107);
@@ -160,7 +162,7 @@ namespace graphicsToolset
             this.Controls.Add(this.process01);
             this.Controls.Add(this.openFile);
             this.Controls.Add(this.toolStatus);
-            this.Controls.Add(this.resultBox03);
+            this.Controls.Add(this.resultStrip);
             this.Controls.Add(this.resultBox02);
             this.Controls.Add(this.resultBox01);
             this.Controls.Add(this.textBox1);
@@ -170,16 +172,17 @@ namespace graphicsToolset
             ((System.ComponentModel.ISupportInitialize)(this.inputPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.resultBox01)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.resultBox02)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.resultBox03)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.resultStrip)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
         #endregion
         private System.Windows.Forms.PictureBox inputPictureBox;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.PictureBox resultBox01;
         private System.Windows.Forms.PictureBox resultBox02;
-        private System.Windows.Forms.PictureBox resultBox03;
+        private System.Windows.Forms.PictureBox resultStrip;
         private System.Windows.Forms.TextBox toolStatus;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.Button openFile;
