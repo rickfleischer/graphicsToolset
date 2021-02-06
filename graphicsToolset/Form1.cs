@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-
 namespace graphicsToolset
 {
     public partial class Form1 : Form
@@ -227,17 +226,14 @@ namespace graphicsToolset
             //    windowGraphics.DrawImage(outmap, rectangle);
             //}
         }
-
         private void inputPictureBox_Click(object sender, EventArgs e)
         {
             straightCopy(sender, e);
         }
-
         private void resultBox01_Click(object sender, EventArgs e)
         {
             markBackslash(sender, e);
         }
-
         private void resultBox02_Click(object sender, EventArgs e)
         {
             explodeSlash(sender, e);
