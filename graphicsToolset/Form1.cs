@@ -7,99 +7,46 @@ namespace graphicsToolset
 {
     public partial class Form1 : Form
     {
-        delegate Color munger(Bitmap inmap, int x, int y, int width, int height);
-        StringBuilder stringBuilder = new StringBuilder();
-        string openPath;
-        public Form1()
+        ImageTool _imageTool;
+        public Form1() => InitializeComponent();
+        internal Form1 addMessage(string message)
         {
-            InitializeComponent();
-        }
-        Form1 addMessage(string message)
-        {
-            stringBuilder.AppendLine(message);
-            toolStatus.Text = stringBuilder.ToString();
+            _imageTool._stringBuilder.AppendLine(message);
+            toolStatus.Text = _imageTool._stringBuilder.ToString();
             return this;
+        }
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
         }
         private void openFile_Click(object sender, EventArgs e)
         {
             openFileDialog.InitialDirectory = @"C:\Users\merle\Desktop\icons\big";
             openFileDialog.ShowDialog();
-            addMessage($"Using file {openFileDialog.FileName}");
-            openPath = openFileDialog.FileName; // @"C:\Users\merle\Desktop\icons\big\me.png";// 
+            _imageTool.openBitmap(openFileDialog.FileName);
         }
-        private static void mungEachPixel(Bitmap inmap, Bitmap outmap, munger munger)
-        {
-            int height = inmap.Height;
-            var width = inmap.Width;
-            foreach(int x in Enumerable.Range(0, width - 1))
-            {
-                foreach(int y in Enumerable.Range(0, height - 1))
-                {
-                    outmap.SetPixel(x, y, munger(inmap, x, y, width, height));
-                }
-            }
-        }
-        private Bitmap extremes(Bitmap map, out Color maxColor, out int xMax, out int yMax, out Color minColor, out int xMin, out int yMin)
-        {
-            bigBitmap big = new bigBitmap(map);
-            Bitmap shitsAndGrins = new Bitmap(map);
-            xMax = int.MinValue;
-            yMax = int.MinValue;
-            xMin = int.MaxValue;
-            yMin = int.MaxValue;
-            int height = map.Height;
-            var width = map.Width;
-            double minimum = double.MaxValue;
-            double maximum = double.MinValue;
-            bigColor bigMaxColor=new bigColor();
-            bigColor bigMinColor=new bigColor();
-            foreach(int x in Enumerable.Range(0, width - 1))
-                foreach(int y in Enumerable.Range(0, height - 1))
-                {
-                    bigColor bigColor = big.data[x,y];
-                    double magnitude = bigColor.magnitude;
-                    if(magnitude > maximum && magnitude < 250)
-                    {
-                        maximum = magnitude;
-                        bigMaxColor = bigColor;
-                        xMax = x;
-                        yMax = y;
-                    }
-                    if(magnitude < minimum && magnitude > 6)
-                    {
-                        minimum = magnitude;
-                        bigMinColor = bigColor;
-                        xMin = x;
-                        yMin = y;
-                    }
-                    shitsAndGrins.SetPixel(x, y, bigMaxColor.toColor());
-                }
-            maxColor = bigMaxColor.toColor();
-            minColor = bigMinColor.toColor();
-            addMessage($"Max {maxColor} at ({xMax},{yMax}); min {minColor} ({xMin},{yMin})");
-            return shitsAndGrins;
-        }
-        static readonly double[,] scale = new double[3,3]
-        {
-            {-1.0, -1.0, -1.0},
-            {-1.0, 8.0, -1.0},
-            {-1.0, -1.0, -1.0}
-        };
-        class bigColor
+        private void inputPictureBox_Click(object sender, EventArgs e) => _imageTool.straightCopy(inputPictureBox);
+        private void resultBox01_Click(object sender, EventArgs e) => _imageTool.markBackslash(resultBox01);
+        private void resultBox02_Click(object sender, EventArgs e) => _imageTool.explodeSlash(resultBox02);
+        private void resultStrip_Click(object sender, EventArgs e) => _imageTool.stripTo(resultStrip);
+    }
+    internal class ImageTool
+    {
+        #region alternative color and bitmap
+        private class BigColor
         {
             public double R,G,B,A;
-            public bigColor(double alpha = 1, double red = 0, double green = 0, double blue = 0)
+            public BigColor(double alpha = 1, double red = 0, double green = 0, double blue = 0)
             {
                 A = alpha;
                 B = blue;
                 G = green;
                 R = red;
             }
-            public static bigColor operator +(bigColor to, bigColor addend) =>
-                new bigColor(Math.Max(addend.A, to.A), addend.R + to.R, addend.G + to.G, addend.B + to.B);
-            public static bigColor operator *(bigColor to, double scale) =>
-                new bigColor(to.A, to.R * scale, scale * to.G, scale * to.B);
-            public bigColor(Color from) : this(from.A, from.R, from.G, from.B) { }
+            public static BigColor operator +(BigColor to, BigColor addend) =>
+                new BigColor(Math.Max(addend.A, to.A), addend.R + to.R, addend.G + to.G, addend.B + to.B);
+            public static BigColor operator *(BigColor to, double scale) =>
+                new BigColor(to.A, to.R * scale, scale * to.G, scale * to.B);
+            public BigColor(Color from) : this(from.A, from.R, from.G, from.B) { }
             public double magnitude => R + G + B;
             public Color toColor() =>
                 Color.FromArgb(
@@ -108,188 +55,161 @@ namespace graphicsToolset
                     (int)Math.Min(255, Math.Max(0, G)),
                     (int)Math.Min(255, Math.Max(0, B)));
         }
-        class bigBitmap
+        private class BigBitmap
         {
-            int width=0, height=0;
-            public bigColor[,] data;
-            public bigBitmap(Bitmap from)
+            private readonly int _width = 0, _height = 0;
+            public BigColor[,] data;
+            public BigBitmap(Bitmap from)
             {
-                width = from.Width;
-                height = from.Height;
-                data = new bigColor[width, height];
-                foreach(int x in Enumerable.Range(0, width - 1))
-                    foreach(int y in Enumerable.Range(0, height - 1))
+                _width = from.Width;
+                _height = from.Height;
+                data = new BigColor[_width, _height];
+                foreach(int x in Enumerable.Range(0, _width - 1))
+                {
+                    foreach(int y in Enumerable.Range(0, _height - 1))
                     {
-                        data[x, y] = new bigColor(from.GetPixel(x, y));
+                        data[x, y] = new BigColor(from.GetPixel(x, y));
                     }
+                }
             }
             public Bitmap getBitmap()
             {
-                Bitmap working = new Bitmap(width,height);
-                foreach(int x in Enumerable.Range(0, width - 1))
-                    foreach(int y in Enumerable.Range(0, height - 1))
+                Bitmap working = new Bitmap(_width,_height);
+                foreach(int x in Enumerable.Range(0, _width - 1))
+                {
+                    foreach(int y in Enumerable.Range(0, _height - 1))
+                    {
                         working.SetPixel(x, y, data[x, y].toColor());
+                    }
+                }
                 return working;
             }
         }
-        private static void convolveBitmap(Bitmap bitmap)
+        #endregion
+        #region locals
+        readonly Form1 _form;
+        Bitmap _bitmap;
+        private static readonly double[,] _scale = new double[3,3]
         {
-            Bitmap copy = new Bitmap(bitmap);
-            foreach(int x in Enumerable.Range(0, bitmap.Width - 1))
-                foreach(int y in Enumerable.Range(0, bitmap.Height - 1))
+            {-1.0, -1.0, -1.0},
+            {-1.0, 8.0, -1.0},
+            {-1.0, -1.0, -1.0}
+        };
+        internal readonly StringBuilder _stringBuilder = new StringBuilder();
+        private readonly Color[] _strip = new Color[40];
+        #endregion
+        internal ImageTool(Form connectTo)
+        {
+            _form = connectTo as Form1;
+        }
+        internal bool openBitmap(string where)
+        {
+            if(!(_bitmap is null))
+            {
+                _bitmap.Dispose();
+            }
+            _bitmap = (Bitmap)Image.FromFile(where);
+            bool worked = !(_bitmap is null);
+            const string loaded = "Loaded";
+            const string couldnt = "Could not load";
+            _form.addMessage($"{(worked ? loaded : couldnt)} {where}");
+            return worked;
+        }
+        /// <summary>
+        /// convolves the _scale matrix with _bitmap
+        /// INVOKE IN "USING"
+        /// </summary>
+        /// <returns>the result of the convolution</returns>
+        private Bitmap convolveBitmap()
+        {
+            Bitmap toReturn = new Bitmap(_bitmap);
+            using(Bitmap copy = new Bitmap(_bitmap))
+            {
+                foreach(int x in Enumerable.Range(0, _bitmap.Width - 1))
                 {
-                    bigColor accum = new bigColor();
-                    if(x > 0 && y > 0)
+                    foreach(int y in Enumerable.Range(0, _bitmap.Height - 1))
                     {
-                        accum += new bigColor(copy.GetPixel(x - 1, y - 1)) * scale[0, 0];
-                        accum += new bigColor(copy.GetPixel(x, y - 1)) * scale[1, 0];
-                        accum += new bigColor(copy.GetPixel(x + 1, y - 1)) * scale[2, 0];
-                        accum += new bigColor(copy.GetPixel(x - 1, y)) * scale[0, 1];
-                        accum += new bigColor(copy.GetPixel(x, y)) * scale[1, 1];
-                        accum += new bigColor(copy.GetPixel(x + 1, y)) * scale[2, 1];
-                        accum += new bigColor(copy.GetPixel(x - 1, y + 1)) * scale[0, 2];
-                        accum += new bigColor(copy.GetPixel(x, y + 1)) * scale[1, 2];
-                        accum += new bigColor(copy.GetPixel(x + 1, y + 1)) * scale[2, 2];
-                        bitmap.SetPixel(x, y, accum.toColor());
+                        BigColor accum = new BigColor();
+                        if(x > 0 && y > 0)
+                        {
+                            accum += new BigColor(copy.GetPixel(x - 1, y - 1)) * _scale[0, 0];
+                            accum += new BigColor(copy.GetPixel(x, y - 1)) * _scale[1, 0];
+                            accum += new BigColor(copy.GetPixel(x + 1, y - 1)) * _scale[2, 0];
+                            accum += new BigColor(copy.GetPixel(x - 1, y)) * _scale[0, 1];
+                            accum += new BigColor(copy.GetPixel(x, y)) * _scale[1, 1];
+                            accum += new BigColor(copy.GetPixel(x + 1, y)) * _scale[2, 1];
+                            accum += new BigColor(copy.GetPixel(x - 1, y + 1)) * _scale[0, 2];
+                            accum += new BigColor(copy.GetPixel(x, y + 1)) * _scale[1, 2];
+                            accum += new BigColor(copy.GetPixel(x + 1, y + 1)) * _scale[2, 2];
+                            toReturn.SetPixel(x, y, accum.toColor());
+                        }
                     }
                 }
+            }
+            return toReturn;
         }
-        private void convolveAll()
+        #region top service functions (Hint: they receive picture boxes)
+        internal void straightCopy(PictureBox to)
         {
-            using(Graphics windowGraphics = resultBox02.CreateGraphics())
+            using(Graphics windowGraphics = to.CreateGraphics())
             {
-                Point point = new Point(0, 0);// inputPictureBox.Location;
-                Size size = inputPictureBox.Size;
-                Rectangle rectangle = new Rectangle(point, size);
-                Bitmap bitmap = (Bitmap)Image.FromFile(openPath);
-                convolveBitmap(bitmap);
-                //windowGraphics.CopyFromScreen(new Point(0, 0), point, size);
-                windowGraphics.DrawImage(bitmap, rectangle);
+                    windowGraphics.DrawImage(_bitmap, new Rectangle(new Point(0, 0), to.Size));
             }
         }
-        static bool interested(int x, int y, int width, int height)
+        internal void markBackslash (PictureBox to)
         {
-            int wDivision = width / 3;
-            int hDivision = height / 3;
-            if(x < wDivision || x > 2 * wDivision) return false;
-            if(y < hDivision || y > 2 * hDivision) return false;
-            return (x == y);
-        }
-        private static Color invertBackslash(Bitmap inmap, int x, int y, int width, int height)
-        {
-            Color pixel = inmap.GetPixel(x, y);
-            if(interested(x, y, width, height))
+            using(Graphics windowGraphics = to.CreateGraphics())
             {
-                pixel = Color.FromArgb(alpha: 255, red: 255 - pixel.R, green: 255 - pixel.G, blue: 255 - pixel.B);
-            }
-            else
-                pixel = Color.FromArgb(alpha: 255, red: pixel.R, green: pixel.G, blue: pixel.B);
-            return pixel;
-        }
-        private void straightCopy(object sender, EventArgs e)
-        {
-            using(Graphics windowGraphics = inputPictureBox.CreateGraphics())
-            {
-                Point point = new Point(0, 0);
-                Size size = inputPictureBox.Size;
-                Rectangle pictureBox = new Rectangle(point, size);
-                Bitmap bitmap = (Bitmap)Image.FromFile(openPath);
-                trial(bitmap);
-                Rectangle imageBox = new Rectangle(point, bitmap.Size);
-                windowGraphics.DrawImage(bitmap, imageBox); // pictureBox
+                using(Bitmap output = new Bitmap(_bitmap))
+                {
+                    mark(output, line(new Point(100, 100), new Point(1, 1), 40));
+                    windowGraphics.DrawImage(output, new Rectangle(new Point(0, 0), output.Size)); // pictureBox
+                }
             }
         }
-        private void markBackslash(object sender, EventArgs e)
+        internal void explodeSlash(PictureBox to)
         {
-            using(Graphics windowGraphics = resultBox01.CreateGraphics())
+            using(Graphics windowGraphics = to.CreateGraphics())
             {
-                Point point = new Point(0, 0);// inputPictureBox.Location;
-                Size size = inputPictureBox.Size;
-                Rectangle rectangle = new Rectangle(point, size);
-                Bitmap bitmap = (Bitmap)Image.FromFile(openPath);
-                bitmap = extremes(bitmap, out Color maxColor, out int xMax, out int yMax, out Color miinColor, out int xMin, out int yMin);
-                //mungEachPixel(bitmap, bitmap, invertBackslash);
-                //windowGraphics.CopyFromScreen(new Point(0, 0), point, size);
-                windowGraphics.DrawImage(bitmap, rectangle);
+                using(Bitmap convolved = convolveBitmap())
+                {
+                    windowGraphics.DrawImage(convolved, new Rectangle(new Point(0, 0), to.Size));
+                }
             }
         }
-        private void explodeSlash(object sender, EventArgs e)
+        internal void stripTo(PictureBox to)
         {
-            convolveAll();
-            //using(Graphics windowGraphics = resultBox02.CreateGraphics())
-            //{
-            //    Point point = new Point(0, 0);// inputPictureBox.Location;
-            //    Size size = inputPictureBox.Size;
-            //    Rectangle rectangle = new Rectangle(point, size);
-            //    Bitmap inmap = (Bitmap)Image.FromFile(openPath);
-            //    Bitmap outmap = new Bitmap(size.Width,size.Height);
-            //    mungEachPixel(inmap, outmap, invertBackslash);
-            //    windowGraphics.DrawImage(outmap, rectangle);
-            //}
-        }
-        private void inputPictureBox_Click(object sender, EventArgs e)
-        {
-            straightCopy(sender, e);
-        }
-        private void resultBox01_Click(object sender, EventArgs e)
-        {
-            markBackslash(sender, e);
-        }
-        private void resultBox02_Click(object sender, EventArgs e)
-        {
-            explodeSlash(sender, e);
-        }
-        Color[] strip = new Color[40]
-        {
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Brown,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Aquamarine,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.DarkBlue,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red,Color.Green,Color.Blue,
-            Color.Red
-        };
-        private void resultStrip_Click(object sender, EventArgs e)
-        {
-            using(Graphics windowGraphics = resultStrip.CreateGraphics())
+            using(Graphics windowGraphics = to.CreateGraphics())
             {
-                Size size = resultStrip.ClientSize;
-                Bitmap outmap = new Bitmap(size.Width,size.Height);
+                Size size = to.ClientSize;
                 int count = 0;
                 int colorIndex = 0;
                 Color color;
-                foreach(int x in Enumerable.Range(0, size.Width - 1))
+                using(Bitmap outmap = new Bitmap(size.Width, size.Height))
                 {
-                    if(count % 21 == 20)
+                    foreach(int x in Enumerable.Range(0, size.Width - 1))
                     {
-                        color = Color.Black;
-                        colorIndex++;
+                        if(count % 21 == 20)
+                        {
+                            color = Color.Black;
+                            colorIndex++;
+                        }
+                        else
+                        {
+                            color = _strip[colorIndex];
+                        }
+                        foreach(int y in Enumerable.Range(0, size.Height - 1))
+                        {
+                            outmap.SetPixel(x, y, color);
+                        }
+                        count++;
                     }
-                    else 
-                    {
-                        color = strip[colorIndex];
-                    }
-                    foreach(int y in Enumerable.Range(0, size.Height - 1))
-                    {
-                        outmap.SetPixel(x, y, color);
-                    }
-                    count++;
+                    windowGraphics.DrawImage(outmap, new Rectangle(new Point(0, 0), size));
                 }
-                windowGraphics.DrawImage(outmap, new Rectangle(new Point(0, 0), size));
             }
         }
-        void trial(Bitmap bitmap)
-        {
-            extract(bitmap, line(new Point(100, 100), new Point(1, 1), 40));
-        }
-        System.Collections.Generic.IEnumerable<Point> line(Point start, Point delta, int count)
+        #endregion
+        private System.Collections.Generic.IEnumerable<Point> line(Point start, Point delta, int count)
         {
             for(Point trace = start; 0 < count--; trace.Offset(delta))
             {
@@ -297,15 +217,15 @@ namespace graphicsToolset
             }
             yield break;
         }
-        int extract(Bitmap bitmap, System.Collections.Generic.IEnumerable<Point> path)
+        private int mark(Bitmap bitmap, System.Collections.Generic.IEnumerable<Point> path)
         {
             int count = 0;
             foreach(Point where in path)
             {
                 Color color = bitmap.GetPixel(where.X, where.Y);
                 bitmap.SetPixel(where.X, where.Y, Color.FromArgb(color.A, 255 - color.R, 255 - color.G, 255 - color.B));
-                strip[count++] = color;
-                if(count >= strip.Length)
+                _strip[count++] = color;
+                if(count >= _strip.Length)
                 {
                     break;
                 }
